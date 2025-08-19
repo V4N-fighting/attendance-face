@@ -120,6 +120,7 @@ export const GridWide = styled(Grid)`
 
 export const GridRow = styled.div<{ margin?: string }>`
   display: flex;
+  flex: 1;
   flex-wrap: wrap;
 
   --grid-margin: ${({ margin }) => margin || '4px'};

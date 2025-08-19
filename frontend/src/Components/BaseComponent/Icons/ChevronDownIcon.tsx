@@ -1,0 +1,7 @@
+import { faChevronDown } from "@fortawesome/free-solid-svg-icons";
+import { Icon } from "../../../styled";
+import React from "react";
+
+export const ChevronDownIcon = ({ ...props }: Partial<React.ComponentProps<typeof Icon>>) => {
+    return <Icon {...props} icon={faChevronDown} />
+}   

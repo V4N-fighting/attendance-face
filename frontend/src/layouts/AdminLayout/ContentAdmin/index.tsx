@@ -6,14 +6,9 @@ import styled from "styled-components";
 
 const ContentAdmin: React.FC<{children: React.ReactNode}> = ({children}) => {
   return (
-    <GridCol col={9}>
       <ContentWrapper>
-        <Title big blue style={{ textAlign: 'center', marginBottom: 32, textTransform: 'uppercase' }}>
-          Content tới chơi
-        </Title>
         {children}
       </ContentWrapper>
-    </GridCol>
   );
 };
 
@@ -22,13 +17,16 @@ const ContentAdmin: React.FC<{children: React.ReactNode}> = ({children}) => {
 
 const ContentWrapper = styled.div`
   background: #f6fbff;
-  min-height: 100vh;
-  border-radius: 0.7rem 0 0 0.7rem;
   box-shadow: 2px 0 8px rgba(34, 46, 60, 0.07);
   display: flex;
   flex-direction: column;
   align-items: stretch;
+  width: 100%;
+  border-radius: 8px;
+  border: 2px solid #000000;
   padding: 32px 0 0 0;
+  margin: 10px 0 30px;
+  height: 100%;
 `;
 
 export default ContentAdmin;

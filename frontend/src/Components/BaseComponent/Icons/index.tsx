@@ -35,6 +35,15 @@ import { PhoneIcon } from "./PhoneIcon";
 import { CircleUserIcon } from "./CircleUserIcon";
 import { ArrowRightFromBracket } from "./ArrowRightFromBracket";
 import { Ticket } from './Ticket';
+import { BellIcon } from './BellIcon';
+import { ChevronDownIcon } from './ChevronDownIcon';
+import { DashboardIcon } from "./DashboardIcon";
+import { StudentIcon } from "./StudentIcon";
+import { ClassIcon } from "./ClassIcon";
+import { AttendanceIcon } from "./AttendanceIcon";
+import { FaceIcon } from "./FaceIcon";
+import { ReportIcon } from "./ReportIcon";
+import { SystemManagementIcon } from "./SystemManagementIcon";
 
 const Icons = {
     CalendarIcon,
@@ -73,6 +82,15 @@ const Icons = {
     PhoneIcon,
     CircleUserIcon,
     ArrowRightFromBracket,
-    Ticket
-}
+    Ticket,
+    BellIcon,
+    ChevronDownIcon,
+    DashboardIcon,
+    StudentIcon,
+    ClassIcon,
+    AttendanceIcon,
+    FaceIcon,
+    ReportIcon,
+    SystemManagementIcon
+}   
 export default Icons

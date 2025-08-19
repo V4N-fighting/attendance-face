@@ -6,6 +6,10 @@
     box-sizing: border-box;
 }
 
+body {
+    background-color: #dadada;
+}
+
 #root {
     position: relative;
     inset: 0;
@@ -45,18 +49,18 @@
   }
   
   ::-webkit-scrollbar-thumb {
-    background: #ff6600;
+    background: #43c0f6;
     border-radius: 10px; /* Bo tròn thanh trượt */
   }
   
   ::-webkit-scrollbar-thumb:hover {
-    background: #e65300;
+    background: #43c0f6;
   }
   
   
   /* Firefox */
   * {
     scrollbar-width: thin;
-    scrollbar-color: #ff6600 #f1f1f1;
+    scrollbar-color: #43c0f6 #f1f1f1;
   }
   
