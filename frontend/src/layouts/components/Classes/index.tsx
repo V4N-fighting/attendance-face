@@ -1,26 +1,82 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { Search, Plus, Edit2, Trash2, Users } from "lucide-react";
-
-
-
-// ---------------- Types ----------------
-interface ClassItem {
-  id: number;
-  name: string;
-  teacher: string;
-  studentCount: number;
-}
-
-// ---------------- Sample Data ----------------
-const classes: ClassItem[] = [
-  { id: 1, name: "CNTT1", teacher: "Thầy Nguyễn Văn A", studentCount: 45 },
-  { id: 2, name: "CNTT2", teacher: "Cô Trần Thị B", studentCount: 38 },
-  { id: 3, name: "CNTT3", teacher: "Thầy Lê Văn C", studentCount: 50 },
-];
+import {
+  getClasses,
+  addClass,
+  updateClass,
+  deleteClass,
+  Class,
+} from "../../../services/classService";
 
 // ---------------- Component ----------------
 const Classes: React.FC = () => {
+  const [classes, setClasses] = useState<Class[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Form state
+  const [name, setName] = useState("");
+  const [teacher, setTeacher] = useState("");
+  const [editingId, setEditingId] = useState<number | null>(null);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const data = await getClasses();
+      setClasses(data);
+      setError(null);
+    } catch (err) {
+      setError("Lỗi khi tải dữ liệu");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (editingId) {
+        await updateClass(editingId, { name, teacher });
+      } else {
+        await addClass({ name, teacher });
+      }
+      setName("");
+      setTeacher("");
+      setEditingId(null);
+      loadData();
+    } catch {
+      alert("Có lỗi xảy ra khi lưu lớp học");
+    }
+  };
+
+  const handleEdit = (cls: Class) => {
+    setEditingId(cls.id!);
+    setName(cls.name);
+    setTeacher(cls.teacher || "");
+  };
+
+  const handleDelete = async (id: number) => {
+    if (window.confirm("Bạn có chắc muốn xóa lớp này?")) {
+      await deleteClass(id);
+      loadData();
+    }
+  };
+
+  const filteredClasses = classes.filter((cls) =>
+    cls.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (cls.teacher || "").toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (loading) return <p>Đang tải dữ liệu...</p>;
+  if (error) return <p>{error}</p>;
+
   return (
     <Container>
       {/* Header */}
@@ -29,13 +85,52 @@ const Classes: React.FC = () => {
         <div style={{ display: "flex", gap: "12px" }}>
           <SearchBox>
             <Search size={18} />
-            <input type="text" placeholder="Tìm lớp học..." />
+            <input
+              type="text"
+              placeholder="Tìm lớp học..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </SearchBox>
-          <Button primary>
+          <Button primary onClick={() => setEditingId(0)}>
             <Plus size={18} /> Thêm lớp
           </Button>
         </div>
       </Header>
+
+      {/* Form thêm/sửa */}
+      {editingId !== null && (
+        <Form onSubmit={handleSubmit}>
+          <input
+            type="text"
+            placeholder="Tên lớp"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
+          <input
+            type="text"
+            placeholder="Giảng viên"
+            value={teacher}
+            onChange={(e) => setTeacher(e.target.value)}
+          />
+          <div style={{ display: "flex", gap: "8px" }}>
+            <Button primary type="submit">
+              {editingId ? "Cập nhật" : "Thêm mới"}
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                setEditingId(null);
+                setName("");
+                setTeacher("");
+              }}
+            >
+              Hủy
+            </Button>
+          </div>
+        </Form>
+      )}
 
       {/* Table */}
       <Table>
@@ -49,19 +144,19 @@ const Classes: React.FC = () => {
           </tr>
         </thead>
         <tbody>
-          {classes.map((cls) => (
+          {filteredClasses.map((cls) => (
             <tr key={cls.id}>
               <Td>{cls.id}</Td>
               <Td>{cls.name}</Td>
-              <Td>{cls.teacher}</Td>
+              <Td>{cls.teacher || "Chưa có GV"}</Td>
               <Td>
                 <Users size={16} style={{ marginRight: "6px" }} />
-                {cls.studentCount}
+                {/* {cls.studentCount ?? 0} */}
               </Td>
               <Td>
                 <Actions>
-                  <Edit2 size={18} />
-                  <Trash2 size={18} />
+                  <Edit2 size={18} onClick={() => handleEdit(cls)} />
+                  <Trash2 size={18} onClick={() => handleDelete(cls.id!)} />
                 </Actions>
               </Td>
             </tr>
@@ -159,6 +254,18 @@ const Actions = styled.div`
     &:hover {
       color: #111827;
     }
+  }
+`;
+
+const Form = styled.form`
+  display: flex;
+  gap: 12px;
+  align-items: center;
+
+  input {
+    padding: 8px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
   }
 `;
 

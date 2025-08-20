@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useEffect } from "react";
 import styled from "styled-components";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { Users, BookOpen, Calendar, CheckCircle } from "lucide-react";
-
+import { GET_TOTAL_CLASSES, GET_TOTAL_STUDENTS, GET_TOTAL_CLASSES_SESSION_TODAY } from "../../../api";
+import { useTotal } from "../../../hooks/useTotal";
 
 // ----------------- Data -----------------
 interface Attendance {
@@ -32,6 +33,18 @@ const COLORS = ["#4CAF50", "#F44336"];
 
 // ----------------- Component -----------------
 const Dashboard: React.FC = () => {
+
+  const { total: totalStudents, loading: loadingStudents, error: errorStudents } = useTotal(GET_TOTAL_STUDENTS);
+  const { total: totalClasses, loading: loadingClasses, error: errorClasses } = useTotal(GET_TOTAL_CLASSES);
+  const { total: totalClassesSession, loading: loadingClassesSession, error: errorClassesSession } = useTotal(GET_TOTAL_CLASSES_SESSION_TODAY);
+ 
+
+
+  if (loadingStudents || loadingClasses || loadingClassesSession) return <p>Đang tải dữ liệu...</p>;
+  if (errorStudents || errorClasses || errorClassesSession) return <p>{errorStudents || errorClasses || errorClassesSession}</p>;
+
+
+
   return (
     <Container>
       {/* Cards thống kê */}
@@ -41,7 +54,7 @@ const Dashboard: React.FC = () => {
             <IconWrapper color="#2563eb"><Users size={28} /></IconWrapper>
             <div>
               <Title>Tổng sinh viên</Title>
-              <Value>1,200</Value>
+              <Value>{totalStudents}</Value>
             </div>
           </CardContent>
         </Card>
@@ -51,7 +64,7 @@ const Dashboard: React.FC = () => {
             <IconWrapper color="#16a34a"><BookOpen size={28} /></IconWrapper>
             <div>
               <Title>Tổng lớp học</Title>
-              <Value>35</Value>
+              <Value>{totalClasses}</Value>
             </div>
           </CardContent>
         </Card>
@@ -61,7 +74,7 @@ const Dashboard: React.FC = () => {
             <IconWrapper color="#9333ea"><Calendar size={28} /></IconWrapper>
             <div>
               <Title>Buổi học hôm nay</Title>
-              <Value>12</Value>
+              <Value>{totalClassesSession}</Value>
             </div>
           </CardContent>
         </Card>

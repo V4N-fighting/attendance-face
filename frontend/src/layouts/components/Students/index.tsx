@@ -1,27 +1,95 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { Search, Plus, Edit2, Trash2 } from "lucide-react";
-
-
-
-// ---------------- Types ----------------
-interface Student {
-  id: number;
-  name: string;
-  class: string;
-  status: "Có mặt" | "Vắng";
-}
-
-// ---------------- Sample Data ----------------
-const students: Student[] = [
-  { id: 1, name: "Nguyễn Văn A", class: "CNTT1", status: "Có mặt" },
-  { id: 2, name: "Trần Thị B", class: "CNTT2", status: "Vắng" },
-  { id: 3, name: "Lê Văn C", class: "CNTT1", status: "Có mặt" },
-  { id: 4, name: "Phạm Thị D", class: "CNTT3", status: "Có mặt" },
-];
+import {
+  getStudents,
+  addStudent,
+  updateStudent,
+  deleteStudent,
+  Student,
+} from "../../../services/studentService";
 
 // ---------------- Component ----------------
 const Students: React.FC = () => {
+  const [students, setStudents] = useState<Student[]>([]);
+  const [filtered, setFiltered] = useState<Student[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // form state
+  const [name, setName] = useState("");
+  const [studentCode, setStudentCode] = useState("");
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [search, setSearch] = useState("");
+
+  // Load data
+  const loadStudents = async () => {
+    try {
+      setLoading(true);
+      const data = await getStudents();
+      setStudents(data);
+      setFiltered(data);
+    } catch (err) {
+      setError("Không thể tải dữ liệu");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadStudents();
+  }, []);
+
+  // Search
+  useEffect(() => {
+    if (!search.trim()) {
+      setFiltered(students);
+    } else {
+      setFiltered(
+        students.filter(
+          (s) =>
+            s.name.toLowerCase().includes(search.toLowerCase()) ||
+            s.student_code.toLowerCase().includes(search.toLowerCase())
+        )
+      );
+    }
+  }, [search, students]);
+
+  // Thêm / sửa
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name || !studentCode) return;
+
+    if (editingId) {
+      await updateStudent(editingId, { name, student_code: studentCode });
+    } else {
+      await addStudent({ name, student_code: studentCode });
+    }
+
+    setName("");
+    setStudentCode("");
+    setEditingId(null);
+    loadStudents();
+  };
+
+  // Xóa
+  const handleDelete = async (id: number) => {
+    if (window.confirm("Bạn có chắc chắn muốn xóa?")) {
+      await deleteStudent(id);
+      loadStudents();
+    }
+  };
+
+  // Chọn để sửa
+  const handleEdit = (s: Student) => {
+    setEditingId(s.id!);
+    setName(s.name);
+    setStudentCode(s.student_code);
+  };
+
+  if (loading) return <p>Đang tải dữ liệu...</p>;
+  if (error) return <p>{error}</p>;
+
   return (
     <Container>
       {/* Header */}
@@ -30,36 +98,69 @@ const Students: React.FC = () => {
         <div style={{ display: "flex", gap: "12px" }}>
           <SearchBox>
             <Search size={18} />
-            <input type="text" placeholder="Tìm sinh viên..." />
+            <input
+              type="text"
+              placeholder="Tìm sinh viên..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </SearchBox>
-          <Button primary>
-            <Plus size={18} /> Thêm sinh viên
-          </Button>
         </div>
       </Header>
+
+      {/* Form thêm / sửa */}
+      <Form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          placeholder="Tên sinh viên"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <input
+          type="text"
+          placeholder="Mã sinh viên"
+          value={studentCode}
+          onChange={(e) => setStudentCode(e.target.value)}
+        />
+        <Button primary type="submit">
+          {editingId ? "Cập nhật" : "Thêm mới"}
+        </Button>
+        {editingId && (
+          <Button
+            type="button"
+            onClick={() => {
+              setEditingId(null);
+              setName("");
+              setStudentCode("");
+            }}
+          >
+            Hủy
+          </Button>
+        )}
+      </Form>
 
       {/* Table */}
       <Table>
         <thead>
           <tr>
+            <Th>STT</Th>
             <Th>ID</Th>
             <Th>Họ và tên</Th>
-            <Th>Lớp</Th>
-            <Th>Trạng thái</Th>
+            <Th>MSSV</Th>
             <Th>Hành động</Th>
           </tr>
         </thead>
         <tbody>
-          {students.map((student) => (
+          {filtered.map((student, index) => (
             <tr key={student.id}>
+              <Td>{index + 1}</Td>
               <Td>{student.id}</Td>
               <Td>{student.name}</Td>
-              <Td>{student.class}</Td>
-              <Td>{student.status}</Td>
+              <Td>{student.student_code}</Td>
               <Td>
                 <Actions>
-                  <Edit2 size={18} />
-                  <Trash2 size={18} />
+                  <Edit2 size={18} onClick={() => handleEdit(student)} />
+                  <Trash2 size={18} onClick={() => handleDelete(student.id!)} />
                 </Actions>
               </Td>
             </tr>
@@ -123,12 +224,44 @@ const Button = styled.button<{ primary?: boolean }>`
   }
 `;
 
+const Form = styled.form`
+  display: flex;
+  gap: 12px;
+  align-items: center;
+
+  input {
+    padding: 8px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+  }
+`;
+
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
   background: #fff;
   border-radius: 12px;
   overflow: hidden;
+  table-layout: fixed;
+
+  thead {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  tbody {
+    display: block;
+    max-height: 400px;
+    overflow-y: auto;
+    width: 100%;
+  }
+
+  tr {
+    display: table;
+    table-layout: fixed;
+    width: 100%;
+  }
 `;
 
 const Th = styled.th`

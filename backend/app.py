@@ -23,19 +23,19 @@ def get_db_connection():
         print(f"Lỗi kết nối MySQL: {err}")
         return None
 
-@app.route("/students", methods=["GET"])
-def get_students():
-    conn = get_db_connection()
-    if conn is None:
-        return jsonify({"error": "Không thể kết nối DB"}), 500
+from api.students import students_bp
+from api.students_count import students_count_bp
+from api.classes import classes_bp
+from api.classes_count import classes_count_bp
+from api.classes_session import classes_session_bp
+from api.classes_session_count import classes_session_count_bp
 
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM students")
-    students = cursor.fetchall()
-    cursor.close()
-    conn.close()
-
-    return jsonify(students)
+app.register_blueprint(students_bp)
+app.register_blueprint(students_count_bp)
+app.register_blueprint(classes_bp)
+app.register_blueprint(classes_count_bp)
+app.register_blueprint(classes_session_bp)
+app.register_blueprint(classes_session_count_bp)
 
 if __name__ == "__main__":
     app.run(debug=True)
