@@ -4,6 +4,13 @@
 const config = {
     routes: {
         admin: '/admin',
+        dashboard: '/admin/dashboard',
+        students: '/admin/students',
+        classes: '/admin/classes',
+        attendance: '/admin/attendance',
+        facial_data: '/admin/facial-data',
+        reports: '/admin/reports',
+        system_management: '/admin/system-management',
         home: '/home',
         profile: '/profile',
         about: '/about',

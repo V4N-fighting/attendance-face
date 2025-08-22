@@ -8,7 +8,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}})
+
 
 def get_db_connection():
     try:
@@ -29,6 +30,7 @@ from api.classes import classes_bp
 from api.classes_count import classes_count_bp
 from api.classes_session import classes_session_bp
 from api.classes_session_count import classes_session_count_bp
+from api.class_student import class_student_bp
 
 app.register_blueprint(students_bp)
 app.register_blueprint(students_count_bp)
@@ -36,6 +38,9 @@ app.register_blueprint(classes_bp)
 app.register_blueprint(classes_count_bp)
 app.register_blueprint(classes_session_bp)
 app.register_blueprint(classes_session_count_bp)
+app.register_blueprint(class_student_bp)
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)

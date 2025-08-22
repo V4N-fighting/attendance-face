@@ -20,53 +20,52 @@ import { SystemManagementIcon } from "../../Components/BaseComponent/Icons/Syste
 import { AttendanceIcon } from "../../Components/BaseComponent/Icons/AttendanceIcon";
 
 interface AdminLayoutProps {
+  children: ReactNode;
 }
 
 
-const sidebar: {title: string, componnent: ReactNode, icon: ReactNode}[] = [
-    {
-      title: 'Dashboard',
-      componnent: <Dashboard />,
-      icon: <DashboardIcon /> 
-    },
-    {
-      title: 'Students',
-      componnent: <Students />,
-      icon: <StudentIcon /> 
-    },
-    {
-      title: 'Classes',
-      componnent: <Classes />,
-      icon: <ClassIcon /> 
-    },
-    {
-      title: 'Attendance',
-      componnent: <Attendance />,
-      icon: <AttendanceIcon />
-    },
-    {
-      title: 'Facial Data',
-      componnent: <FacialData />,
-      icon: <FaceIcon />
-    },
-    {
-      title: 'Reports',
-      componnent: <Reports />,
-      icon: <ReportIcon />
-    },
-    {
-      title: 'System Management',
-      componnent: <SystemManagement />,
-      icon: <SystemManagementIcon />
-    },
-  ]
+const sidebar: {title: string, path: string, icon: ReactNode}[] = [
+  {
+    title: 'Dashboard',
+    path: '/admin/dashboard',
+    icon: <DashboardIcon />
+  },
+  {
+    title: 'Students',
+    path: '/admin/students',
+    icon: <StudentIcon />
+  },
+  {
+    title: 'Classes',
+    path: '/admin/classes',
+    icon: <ClassIcon />
+  },
+  {
+    title: 'Attendance',
+    path: '/admin/attendance',
+    icon: <AttendanceIcon />
+  },
+  {
+    title: 'Facial Data',
+    path: '/admin/facial-data',
+    icon: <FaceIcon />
+  },
+  {
+    title: 'Reports',
+    path: '/admin/reports',
+    icon: <ReportIcon />
+  },
+  {
+    title: 'System Management',
+    path: '/admin/system-management',
+    icon: <SystemManagementIcon />
+  },
+]
 
 
-function AdminLayout({  }: AdminLayoutProps): JSX.Element {
+function AdminLayout({ children }: AdminLayoutProps): JSX.Element {
+  const [currentIndex, setCurrentIndex] = useState(0);
 
-
-    const [currentIndex, setCurrentIndex] = useState(0);
-    
     return (
         <Wrapper>
             <Header><HeaderAdmin curTitle={sidebar[currentIndex].title}/></Header>
@@ -78,7 +77,7 @@ function AdminLayout({  }: AdminLayoutProps): JSX.Element {
                         </GridCol>
                         <GridCol col={9}>
                             <ContentAdmin>
-                                {sidebar[currentIndex].componnent}
+                                {children}
                             </ContentAdmin>
                         </GridCol>
                     </GridRow>

@@ -76,10 +76,24 @@ def delete_student(id):
     if conn is None:
         return jsonify({"error": "Không thể kết nối DB"}), 500
 
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM students WHERE id=%s", (id,))
-    conn.commit()
-    cursor.close()
-    conn.close()
+    try:
+        cursor = conn.cursor()
 
-    return jsonify({"message": "Xóa thành công", "id": id})
+        # Xóa quan hệ trong class_student trước
+        cursor.execute("DELETE FROM class_student WHERE student_id=%s", (id,))
+
+        # Xóa sinh viên
+        cursor.execute("DELETE FROM students WHERE id=%s", (id,))
+        conn.commit()
+
+        rows = cursor.rowcount  # số dòng xóa từ bảng students
+        cursor.close()
+        conn.close()
+
+        if rows > 0:
+            return jsonify({"message": "Đã xóa sinh viên và quan hệ liên quan", "id": id}), 200
+        else:
+            return jsonify({"error": "Không tìm thấy sinh viên để xóa"}), 404
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

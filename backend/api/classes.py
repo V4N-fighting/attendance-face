@@ -66,14 +66,22 @@ def update_class(id):
 # Xóa lớp học
 @classes_bp.route('/classes/<int:id>', methods=['DELETE'])
 def delete_class(id):
-    conn = get_db_connection()
-    if conn is None:
-        return jsonify({"error": "Không thể kết nối DB"}), 500
+    try:
+        print(">>> DELETE request for id =", id, flush=True)
 
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM classes WHERE id=%s", (id,))
-    conn.commit()
-    cursor.close()
-    conn.close()
+        conn = get_db_connection()
+        if conn is None:
+            return jsonify({"error": "Không thể kết nối DB"}), 500
 
-    return jsonify({"message": "Xóa lớp thành công", "id": id})
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM classes WHERE id=%s", (id,))
+        conn.commit()
+        print(">>> Rows affected =", cursor.rowcount, flush=True)
+        cursor.close()
+        conn.close()
+
+        return jsonify({"message": "Xóa lớp thành công", "id": id})
+    except Exception as e:
+        print("!!! Lỗi khi xóa:", e, flush=True)
+        return jsonify({"error": str(e)}), 500
+

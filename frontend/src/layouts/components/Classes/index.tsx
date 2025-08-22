@@ -8,10 +8,22 @@ import {
   deleteClass,
   Class,
 } from "../../../services/classService";
+import {
+  getClassStudentCount,
+  getStudentsByClass,
+  deleteStudentFromClass,
+  addClass as addClassStudentMapping
+} from "../../../services/classStudentService";
+import {
+  getStudents,
+  Student
+} from "../../../services/studentService";
+import { RowBetween, SupTitle } from "../../../styled";
 
 // ---------------- Component ----------------
 const Classes: React.FC = () => {
   const [classes, setClasses] = useState<Class[]>([]);
+  const [counts, setCounts] = useState<Record<number, number>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,11 +34,65 @@ const Classes: React.FC = () => {
   const [teacher, setTeacher] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
 
+  // Student modal & data state
+  const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [studentLoading, setStudentLoading] = useState(false);
+  // Student candidates who are not in class
+  const [candidates, setCandidates] = useState<Student[]>([]);
+  // --- States for add/find/filter student logic ---
+  const [selectedStudentId, setSelectedStudentId] = useState<number | "">(""); // sử dụng cho hàm cũ, giờ không còn dùng nữa
+  const [studentCodeSearch, setStudentCodeSearch] = useState(""); // Lọc sinh viên trong bảng
+  // Giao diện thêm sinh viên
+  const [showAddStudentForm, setShowAddStudentForm] = useState(false);
+  const [studentAddInput, setStudentAddInput] = useState("");
+  const [studentAddDropdown, setStudentAddDropdown] = useState(false);
+  const [selectedStudentForAdd, setSelectedStudentForAdd] = useState<number | null>(null);
+
   const loadData = async () => {
     try {
       setLoading(true);
       const data = await getClasses();
       setClasses(data);
+
+      // gọi count cho từng class song song
+      const entries = await Promise.all(
+        data.map(async (c) => {
+          const cnt = await getClassStudentCount(c.id!);
+          return [c.id!, cnt] as const;
+        })
+      );
+
+      const map: Record<number, number> = {};
+      for (const [id, cnt] of entries) map[id] = cnt;
+      setCounts(map);
+
+      setError(null);
+    } catch (err) {
+      setError("Lỗi khi tải dữ liệu");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadStudentsData = async () => {
+    try {
+      setLoading(true);
+      const data = await getStudentsByClass(selectedClassId!);
+      setStudents(data);
+      console.log("sinh vien: ", data);
+      // gọi count cho từng class song song
+      const entries = await Promise.all(
+        data.map(async (c) => {
+          const cnt = await getClassStudentCount(c.id!);
+          return [c.id!, cnt] as const;
+        })
+      );
+
+      const map: Record<number, number> = {};
+      for (const [id, cnt] of entries) map[id] = cnt;
+      setCounts(map);
+
       setError(null);
     } catch (err) {
       setError("Lỗi khi tải dữ liệu");
@@ -62,11 +128,73 @@ const Classes: React.FC = () => {
     setTeacher(cls.teacher || "");
   };
 
-  const handleDelete = async (id: number) => {
-    if (window.confirm("Bạn có chắc muốn xóa lớp này?")) {
+  const handleDeleteClass = async (id: number) => {
+    if (window.confirm("Bạn có chắc muốn xóa lớp học này?")) {
       await deleteClass(id);
       loadData();
     }
+  };
+
+
+
+
+  // Fetch students when selectedClassId changes
+  useEffect(() => {
+    const fetchStudentsAndCandidates = async () => {
+      if (selectedClassId === null) return;
+      setStudentLoading(true);
+      try {
+        const data = await getStudentsByClass(selectedClassId);
+        setStudents(data || []);
+        // Lấy toàn bộ sinh viên, loại trừ các sinh viên đã có trong lớp hiện tại
+        const allStudents = await getStudents();
+        const currentIds = new Set((data || []).map((s: any) => s.id));
+        setCandidates(allStudents.filter((stu: any) => !currentIds.has(stu.id)));
+        setSelectedStudentId("");
+      } catch {
+        setStudents([]);
+        setCandidates([]);
+      } finally {
+        setStudentLoading(false);
+      }
+    };
+    fetchStudentsAndCandidates();
+  }, [selectedClassId]);
+
+  // Handler to remove student from class
+  const handleStudentDelete = async (classId: number, studentId: number) => {
+
+    if (window.confirm("Bạn có chắc muốn xoá sinh viên này khỏi lớp?")) {
+      
+      await deleteStudentFromClass(classId, studentId);
+      alert("Xoá sinh viên khỏi lớp thành công");
+
+      const data = await getStudentsByClass(classId);
+      setStudents(data || []);
+      // Cập nhật lại candidates
+      const allStudents = await getStudents();
+      const currentIds = new Set((data || []).map((s: any) => s.id));
+      setCandidates(allStudents.filter((stu: any) => !currentIds.has(stu.id)));
+      loadData(); // cập nhật lại số lượng SV của lớp
+    }
+  };
+
+  // Handler to add student to class
+  const handleStudentAdd = async () => {
+    if (!selectedStudentId) return;
+    await addClassStudentMapping({ class_id: selectedClassId!, student_id: Number(selectedStudentId) });
+    // Refresh students and candidates
+    const data = await getStudentsByClass(selectedClassId!);
+    setStudents(data || []);
+    const allStudents = await getStudents();
+    const currentIds = new Set((data || []).map((s: any) => s.id));
+    setCandidates(allStudents.filter((stu: any) => !currentIds.has(stu.id)));
+    setSelectedStudentId("");
+    loadData();
+  };
+
+  const handleShowStudents = async (classId: number) => {
+    setSelectedClassId(classId);
   };
 
   const filteredClasses = classes.filter((cls) =>
@@ -76,6 +204,9 @@ const Classes: React.FC = () => {
 
   if (loading) return <p>Đang tải dữ liệu...</p>;
   if (error) return <p>{error}</p>;
+
+  // Lấy tên lớp đang chọn
+  const selectedClassName = classes.find(cls => cls.id === selectedClassId)?.name || "";
 
   return (
     <Container>
@@ -136,6 +267,7 @@ const Classes: React.FC = () => {
       <Table>
         <thead>
           <tr>
+            <Th>STT</Th>
             <Th>ID</Th>
             <Th>Tên lớp</Th>
             <Th>Giảng viên</Th>
@@ -144,25 +276,175 @@ const Classes: React.FC = () => {
           </tr>
         </thead>
         <tbody>
-          {filteredClasses.map((cls) => (
-            <tr key={cls.id}>
+          {filteredClasses.map((cls, index) => (
+            <tr
+              key={cls.id}
+              style={{ background: selectedClassId === cls.id ? '#e5edfa' : undefined, cursor: 'pointer' }}
+              onClick={() => handleShowStudents(cls.id!)}>
+              <Td>{index + 1}</Td>
               <Td>{cls.id}</Td>
               <Td>{cls.name}</Td>
               <Td>{cls.teacher || "Chưa có GV"}</Td>
               <Td>
                 <Users size={16} style={{ marginRight: "6px" }} />
-                {/* {cls.studentCount ?? 0} */}
+                {counts[cls.id!] ?? 0}
               </Td>
               <Td>
                 <Actions>
-                  <Edit2 size={18} onClick={() => handleEdit(cls)} />
-                  <Trash2 size={18} onClick={() => handleDelete(cls.id!)} />
+                  <Edit2 size={18} onClick={e => { e.stopPropagation(); handleEdit(cls); }} />
+                  <Trash2 size={18} onClick={e => { e.stopPropagation(); handleDeleteClass(cls.id!); }} />
                 </Actions>
               </Td>
             </tr>
           ))}
         </tbody>
       </Table>
+
+      {/* Students of selected class */}
+      {selectedClassId && (
+        <StudentContainer>
+          <SupTitle>Danh sách sinh viên lớp {selectedClassName}</SupTitle>
+
+          <RowBetween>
+          {/* Ô tìm kiếm danh sách sinh viên trong lớp */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <input
+              type="text"
+              placeholder="Tìm sinh viên theo mã hoặc tên..."
+              value={studentCodeSearch}
+              onChange={e => setStudentCodeSearch(e.target.value)}
+              style={{ padding: 8, borderRadius: 8, border: "1px solid #d1d5db", minWidth: 200 }}
+            />
+          </div>
+          <div >
+                {!showAddStudentForm && (
+                  <Button type="button" primary onClick={() => { setShowAddStudentForm(true); setStudentAddInput(""); setSelectedStudentForAdd(null); }}>
+                    + Thêm sinh viên
+                  </Button>
+                )}
+                {showAddStudentForm && (
+                  <form
+                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8, marginTop: 8, position: 'relative' }}
+                    onSubmit={async e => {
+                      e.preventDefault();
+                      if (!selectedStudentForAdd) return;
+                      await addClassStudentMapping({ class_id: selectedClassId!, student_id: selectedStudentForAdd });
+                      const data = await getStudentsByClass(selectedClassId!);
+                      setStudents(data || []);
+                      const allStudents = await getStudents();
+                      const currentIds = new Set((data || []).map((s: any) => s.id));
+                      setCandidates(allStudents.filter((s: any) => !currentIds.has(s.id)));
+                      setStudentAddInput("");
+                      setShowAddStudentForm(false);
+                      setSelectedStudentForAdd(null);
+                      loadData();
+                    }}
+                  >
+                    <input
+                      autoFocus
+                      type="text"
+                      placeholder="Nhập mã/tên sinh viên để tìm..."
+                      value={studentAddInput}
+                      onFocus={() => setStudentAddDropdown(true)}
+                      onChange={e => {
+                        setStudentAddInput(e.target.value);
+                        setSelectedStudentForAdd(null);
+                        setStudentAddDropdown(true);
+                      }}
+                      style={{minWidth:240, padding:8, borderRadius:8, border:"1px solid #d1d5db"}}
+                    />
+                    {studentAddInput.trim() !== '' && studentAddDropdown && (
+                      <div style={{
+                        background: '#fff',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        position: 'absolute',
+                        left: 0,
+                        top: '42px',
+                        zIndex: 10,
+                        minWidth: 240,
+                        maxHeight: 180,
+                        overflowY: 'auto',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.07)'
+                      }}>
+                        {candidates
+                          .filter(stu =>
+                            stu.student_code.toLowerCase().includes(studentAddInput.toLowerCase()) ||
+                            stu.name.toLowerCase().includes(studentAddInput.toLowerCase())
+                          ).slice(0, 5)
+                          .map(stu => (
+                            <div
+                              key={stu.id}
+                              style={{
+                                padding: '8px 12px',
+                                cursor: 'pointer',
+                                borderBottom: '1px solid #f3f4f6',
+                                background: selectedStudentForAdd === stu.id ? "#e5edfa" : undefined
+                              }}
+                              onClick={() => {
+                                if (stu.id !== undefined) {
+                                  setSelectedStudentForAdd(stu.id);
+                                }
+                                setStudentAddInput(stu.student_code + ' - ' + stu.name);
+                                setStudentAddDropdown(false);
+                              }}
+                            >
+                              <strong>{stu.student_code}</strong> - {stu.name}
+                            </div>
+                          ))
+                        }
+                        {candidates.filter(stu =>
+                          stu.student_code.toLowerCase().includes(studentAddInput.toLowerCase()) ||
+                          stu.name.toLowerCase().includes(studentAddInput.toLowerCase())
+                        ).length === 0 && (
+                            <div style={{ padding: '8px 12px', color: '#888' }}>Không tìm thấy sinh viên phù hợp</div>
+                          )}
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                      <Button primary type="submit" disabled={!selectedStudentForAdd}>Thêm vào lớp</Button>
+                      <Button type="button" onClick={() => { setShowAddStudentForm(false); setStudentAddInput(""); setSelectedStudentForAdd(null); }}>Huỷ</Button>
+                    </div>
+                  </form>
+                )}
+              </div>
+          </RowBetween>
+          {studentLoading ? (
+            <p>Đang tải sinh viên...</p>
+          ) : (
+            <>
+              <Table>
+                <thead>
+                  <tr>
+                    <Th>STT</Th>
+                    <Th>Mã SV</Th>
+                    <Th>Họ tên</Th>
+                    <Th>Hành động</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {students.filter(stu =>
+                    stu.student_code.toLowerCase().includes(studentCodeSearch.toLowerCase()) ||
+                    stu.name.toLowerCase().includes(studentCodeSearch.toLowerCase())
+                  ).map((stu, idx) => (
+                    <tr key={stu.id}>
+                      <Td>{idx + 1}</Td>
+                      <Td>{stu.student_code}</Td>
+                      <Td>{stu.name}</Td>
+                      <Td>
+                        <Actions>
+                          <Trash2 size={18} onClick={() => handleStudentDelete(selectedClassId!,stu.id!)} />
+                        </Actions>
+                      </Td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+              
+            </>
+          )}
+        </StudentContainer>
+      )}
     </Container>
   );
 };
@@ -226,6 +508,26 @@ const Table = styled.table`
   background: #fff;
   border-radius: 12px;
   overflow: hidden;
+  table-layout: fixed;
+
+  thead {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  tbody {
+    display: block;
+    max-height: 400px;
+    overflow-y: auto;
+    width: 100%;
+  }
+
+  tr {
+    display: table;
+    table-layout: fixed;
+    width: 100%;
+  }
 `;
 
 const Th = styled.th`
@@ -266,6 +568,26 @@ const Form = styled.form`
     padding: 8px;
     border: 1px solid #d1d5db;
     border-radius: 8px;
+  }
+`;
+
+// Student styled table
+const StudentContainer = styled.div`
+  background: #f6f8fc;
+  border-radius: 10px;
+  margin-top: 32px;
+  padding: 18px 20px;
+`;
+const StudentTable = styled.table`
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+
+  th, td {
+    padding: 10px;
+    border-bottom: 1px solid #e5e7eb;
   }
 `;
 

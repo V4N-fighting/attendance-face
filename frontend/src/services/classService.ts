@@ -28,6 +28,8 @@ export const updateClass = async (id: number, cls: Class): Promise<Class> => {
 
 // Xóa lớp
 export const deleteClass = async (id: number): Promise<{ message: string; id: number }> => {
+  console.log("DELETE URL:", `${GET_CLASSES}/${id}`);
   const res = await axios.delete(`${GET_CLASSES}/${id}`);
+
   return res.data;
 };

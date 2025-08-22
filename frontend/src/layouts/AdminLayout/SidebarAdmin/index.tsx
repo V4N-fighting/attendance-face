@@ -4,7 +4,7 @@ import styled from "styled-components";
 
 const SidebarAdmin: React.FC<{sidebar: {
   title: string, 
-  componnent: ReactNode, 
+  path: string,
   icon: ReactNode
 }[], setCurrentIndex: React.Dispatch<React.SetStateAction<number>>}> = ({sidebar, setCurrentIndex}) => {
     
@@ -14,7 +14,7 @@ const SidebarAdmin: React.FC<{sidebar: {
           {sidebar?.map((item, index) => (
             <MenuItem 
               key={item.title}
-              onClick={() => {setCurrentIndex(index)}}>
+              onClick={() => {setCurrentIndex(index); window.location.href = item.path}}>
               {item.icon}
               {item.title}
             </MenuItem>
