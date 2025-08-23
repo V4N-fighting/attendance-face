@@ -40,7 +40,7 @@ const HeaderAdmin: React.FC<HeaderAdminProps> = ({curTitle}) => {
       </FlexBox>
       {/* Right: Notification + Admin */}
       <FlexBox style={{ justifyContent: 'flex-end', width: 'auto' }}>
-        <Notification>
+        <Notification onClick={() => alert("Chức năng đang dược phát triển")}>
           <Icons.BellIcon />
           {isNotification && <Badge />}
         </Notification>

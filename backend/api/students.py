@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from db import get_db_connection
-
+import json
 students_bp = Blueprint('students', __name__)
 
 # Lấy danh sách sinh viên
@@ -11,10 +11,18 @@ def get_students():
         return jsonify({"error": "Không thể kết nối DB"}), 500
 
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT id, name, student_code FROM students")
+    cursor.execute("SELECT id, name, student_code, image_urls, created_at FROM students")
     students = cursor.fetchall()
     cursor.close()
     conn.close()
+
+    # Parse image_urls từ string sang dict
+    for stu in students:
+        if stu["image_urls"]:
+            try:
+                stu["image_urls"] = json.loads(stu["image_urls"])
+            except json.JSONDecodeError:
+                stu["image_urls"] = {}
 
     return jsonify(students)
 

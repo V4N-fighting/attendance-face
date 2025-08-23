@@ -3,6 +3,8 @@ import axios from "axios";
 import { GET_STUDENTS } from "../api";
 
 export interface Student {
+  image_urls?: any;
+  created_at?: any;
   id?: number;
   name: string;
   student_code: string;

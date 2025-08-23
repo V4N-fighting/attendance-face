@@ -27,6 +27,7 @@ const Students: React.FC = () => {
     try {
       setLoading(true);
       const data = await getStudents();
+      console.log("sinh vien: ", data);
       setStudents(data);
       setFiltered(data);
     } catch (err) {

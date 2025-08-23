@@ -5,6 +5,7 @@ load_dotenv()
 import pickle
 from dataclasses import dataclass, field
 from typing import List
+from db import get_db_connection
 
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_USER = os.getenv("DB_USER", "root")
@@ -19,19 +20,17 @@ class Student:
 
 
 def get_all_students():
-    conn = mysql.connector.connect(
-        host=DB_HOST,
-        user=DB_USER,
-        password=DB_PASSWORD,
-        database=DB_NAME
-    )
-    cursor = conn.cursor()
-    cursor.execute("SELECT student_code, name, encodings FROM students")
-    all_students = cursor.fetchall()
-    cursor.close()
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM students")
+    students = cursor.fetchall()
     conn.close()
-    students = []
-    for code, hoten, encodings_bytes in all_students:
-        encodings = pickle.loads(encodings_bytes)
-        students.append(Student(str(code), str(hoten), encodings))
+
+    for student in students:
+        encodings_bytes = student["encodings"]
+        if encodings_bytes is not None:   # ✅ check tránh None
+            student["encodings"] = pickle.loads(encodings_bytes)
+        else:
+            student["encodings"] = None   # hoặc [] tuỳ bạn
     return students
+
