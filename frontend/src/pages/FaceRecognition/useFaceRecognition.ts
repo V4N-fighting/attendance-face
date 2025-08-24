@@ -10,6 +10,8 @@ export function useFaceRecognition() {
   const [name, setName] = useState<string>("");
   const [lastScan, setLastScan] = useState<string>("");
   const [registering, setRegistering] = useState<boolean>(false);
+
+  const [imageUrl, setImageUrl] = useState<string | undefined>();
   const scanningRef = useRef(true);
 
   useEffect(() => {
@@ -64,12 +66,15 @@ export function useFaceRecognition() {
           headers: { "Content-Type": "multipart/form-data" },
         });
         setLastScan(new Date().toLocaleTimeString());
+        
+
+        // Khi nhận diện thành công:
         if (res.data.status === "recognized") {
-          setResult(`Xin chào, ${res.data.name}!”`);
+          setResult(`Xin chào, ${res.data.name}!`);
           setRecognized(true);
           setName(res.data.name || "");
+          setImageUrl(res.data.image_url); // <-- truyền giá trị trả về vào state
           scanningRef.current = false;
-          stopCamera();
           return;
         } else if (res.data.status === "no_face") {
           setResult("Không thấy khuôn mặt nào");
@@ -139,5 +144,6 @@ export function useFaceRecognition() {
     registering,
     handleRegister,
     handleRefreshCamera,
+    imageUrl,
   };
 }

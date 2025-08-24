@@ -18,7 +18,8 @@ const FaceRecognition: React.FC = () => {
     registering,
     handleRegister,
     handleRefreshCamera,
-  } = useFaceRecognition();
+    imageUrl,
+    } = useFaceRecognition();
 
   return (
     <AppBackground>
@@ -36,11 +37,17 @@ const FaceRecognition: React.FC = () => {
         </GlassPanel>
         <GlassPanelDark as="section">
           <PanelTitle style={{ color: '#fff', textShadow: '0 2px 12px #5f89f8' }}>Kết quả nhận diện</PanelTitle>
-          {recognized && name ? (
+          {recognized && imageUrl ? (
+            <img src={imageUrl} alt={name} style={{
+              width: 100, height: 100, borderRadius: '54px',
+              margin: '0 auto 18px auto', border: '5px solid #fff7', objectFit: 'cover',
+              boxShadow: '0 4px 36px #fff8, 0 12px 28px #acadeb55'
+            }} />
+          ) : (
             <AvatarCircle bg={randomAvatarBg(name)}>
               {getAbbrName(name)}
             </AvatarCircle>
-          ) : <AvatarCircle bg="#dededa22" style={{ color: '#ccc' }}>?</AvatarCircle>}
+          )}
           <ResultBox style={{ color: recognized ? 'red' : '#ffe2ea', background: recognized ? 'rgba(33,245,150,0.15)' : 'rgba(255,18,60,0.12)' }}>
             {result}
           </ResultBox>

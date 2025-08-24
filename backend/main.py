@@ -46,7 +46,32 @@ async def recognize(file: UploadFile = File(...)):
         return {"status": "unknown"}
     else:
         name_out = results[0].split(" - ")[1] if " - " in results[0] else results[0]
-        return {"status": "recognized", "name": name_out}
+
+        # Lấy image_url từ DB
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT image_urls FROM students WHERE name=%s", (name_out,))
+        row = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        image_url = None
+        if row and row["image_urls"]:
+            import json
+            image_dict = {}
+            if isinstance(row["image_urls"], str):
+                try:
+                    image_dict = json.loads(row["image_urls"])
+                except Exception:
+                    image_dict = {}
+            elif isinstance(row["image_urls"], dict):
+                image_dict = row["image_urls"]
+            image_url = image_dict.get("main") or next(iter(image_dict.values()), None)
+
+        return {
+            "status": "recognized",
+            "name": name_out,
+            "image_url": image_url
+        }
 
 
 @app.post("/register/")
