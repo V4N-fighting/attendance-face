@@ -17,9 +17,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Import và include các admin routers (quản trị)
+from api.students_router import router as students_router
+from api.students_count_router import router as students_count_router
+from api.classes_router import router as classes_router
+from api.classes_count_router import router as classes_count_router
+from api.classes_session_router import router as classes_session_router
+from api.classes_session_count_router import router as classes_session_count_router
+from api.class_student_router import router as class_student_router
+
+app.include_router(students_router)
+app.include_router(students_count_router)
+app.include_router(classes_router)
+app.include_router(classes_count_router)
+app.include_router(classes_session_router)
+app.include_router(classes_session_count_router)
+app.include_router(class_student_router)
+
 @app.post("/recognize/")
 async def recognize(file: UploadFile = File(...)):
-    # ... load ảnh, nhận diện như cũ
+    image_bytes = await file.read()
+    np_arr = np.frombuffer(image_bytes, np.uint8)
+    frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
     results = recognizer.recognize_face(frame)
     if not results:
         return {"status": "no_face"}
