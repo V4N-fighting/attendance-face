@@ -7,7 +7,7 @@ import Attendance from "../layouts/components/Attendance";
 import FacialData from "../layouts/components/FacialData";
 import Reports from "../layouts/components/Reports";
 import SystemManagement from "../layouts/components/SystemManagement";
-
+import FaceRecognition from "../pages/FaceRecognition";
 
 interface Route {
     path: string;
@@ -19,6 +19,7 @@ interface Route {
 const publicRoutes: Route[] = [
     { path: '/', component: Home, layout: 'default' },
     { path: config.routes.home, component: Home, layout: 'default' },
+    { path: config.routes.face_recognition, component: FaceRecognition, layout: 'default' },
     { path: config.routes.admin, component: Dashboard, layout: 'admin' },
     { path: config.routes.dashboard, component: Dashboard, layout: 'admin' },
     { path: config.routes.students, component: Students, layout: 'admin' },

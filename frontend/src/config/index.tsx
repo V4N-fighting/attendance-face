@@ -25,6 +25,7 @@ const config = {
         blog_detail: '/blog_detail',
         tour_detail: '/tour_detail',
         check_out: '/check_out',
+        face_recognition: '/face_recognition',
     },
 };
 

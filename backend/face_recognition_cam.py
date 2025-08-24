@@ -7,8 +7,8 @@ from face_utils import count_matching_encodings
 
 logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
 
-THRESHOLD = 0.45   # Có thể tinh chỉnh sau
-POSE_REQUIRED = 2  # >= Bao nhiêu pose dưới threshold thì nhận là cùng người
+THRESHOLD = 0.6   # Có thể tinh chỉnh sau
+POSE_REQUIRED = 1# >= Bao nhiêu pose dưới threshold thì nhận là cùng người
 
 # Load students từ DB
 logging.info("Loading students from DB...")
@@ -39,8 +39,10 @@ while True:
         best_min_dist = 1e9
         best_dist = None
         for student in students:
-            match_count, min_dist, distances = count_matching_encodings(student.encodings, encoding, THRESHOLD)
-            logging.debug(f"[%s] Dists: %s | Match count: %d", f"{student.code}-{student.name}", distances, match_count)
+            if not student.get('encodings'):
+                continue
+            match_count, min_dist, distances = count_matching_encodings(student['encodings'], encoding, THRESHOLD)
+            logging.debug(f"[%s] Dists: %s | Match count: %d", f"{student.get('code', '')}-{student.get('name', '')}", distances, match_count)
             if match_count > best_count or (match_count == best_count and min_dist < best_min_dist):
                 best_count = match_count
                 best_min_dist = min_dist
@@ -48,7 +50,7 @@ while True:
                 best_dist = distances
         name_display = "Unknown"
         if best_count >= POSE_REQUIRED:
-            name_display = f"{best_student.code} - {best_student.name}"
+            name_display = f"{best_student.get('code', '')} - {best_student.get('name', '')}"
         # Scale lại vị trí rectangle
         top *= 2
         right *= 2
