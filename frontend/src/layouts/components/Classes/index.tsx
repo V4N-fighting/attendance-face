@@ -19,6 +19,7 @@ import {
   Student
 } from "../../../services/studentService";
 import { RowBetween, SupTitle } from "../../../styled";
+import Loader from "../../../Components/Loader";
 
 // ---------------- Component ----------------
 const Classes: React.FC = () => {
@@ -202,7 +203,7 @@ const Classes: React.FC = () => {
     (cls.teacher || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (loading) return <p>Đang tải dữ liệu...</p>;
+  if (loading) return <Loader />;
   if (error) return <p>{error}</p>;
 
   // Lấy tên lớp đang chọn

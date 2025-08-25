@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { Search, Upload, Edit2, Trash2, Image } from "lucide-react";
 import { getStudents } from "../../../services/studentService";
+import Loader from "../../../Components/Loader";
 
 
 // ---------------- Types ----------------
@@ -63,7 +64,7 @@ const FacialData: React.FC = () => {
     }
   }, [search, facialData]);
 
-  if (loading) return <p>Đang tải dữ liệu...</p>;
+  if (loading) return <Loader />;
   if (error) return <p>{error}</p>;
 
   return (

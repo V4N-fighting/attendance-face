@@ -8,6 +8,7 @@ import {
   deleteStudent,
   Student,
 } from "../../../services/studentService";
+import Loader from "../../../Components/Loader";
 
 // ---------------- Component ----------------
 const Students: React.FC = () => {
@@ -88,7 +89,7 @@ const Students: React.FC = () => {
     setStudentCode(s.student_code);
   };
 
-  if (loading) return <p>Đang tải dữ liệu...</p>;
+  if (loading) return <Loader />;
   if (error) return <p>{error}</p>;
 
   return (

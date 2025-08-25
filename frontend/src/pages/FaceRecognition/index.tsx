@@ -36,7 +36,7 @@ const FaceRecognition: React.FC = () => {
           <MobileNote>Đề nghị xoay ngang hoặc dùng màn hình lớn để đạt trải nghiệm tốt nhất.</MobileNote>
         </GlassPanel>
         <GlassPanelDark as="section">
-          <PanelTitle style={{ color: '#fff', textShadow: '0 2px 12px #5f89f8' }}>Kết quả nhận diện</PanelTitle>
+          <PanelTitle>Kết quả nhận diện</PanelTitle>
           {recognized && imageUrl ? (
             <img src={imageUrl} alt={name} style={{
               width: 100, height: 100, borderRadius: '54px',
@@ -48,7 +48,7 @@ const FaceRecognition: React.FC = () => {
               {getAbbrName(name)}
             </AvatarCircle>
           )}
-          <ResultBox style={{ color: recognized ? 'red' : '#ffe2ea', background: recognized ? 'rgba(33,245,150,0.15)' : 'rgba(255,18,60,0.12)' }}>
+          <ResultBox style={{ color: recognized ? 'red' : '#ffe2ea', background: recognized ? 'rgb(255, 255, 255)' : 'rgba(255,18,60,0.12)' }}>
             {result}
           </ResultBox>
           <Meta>🕒 Lần quét gần nhất: <b>{lastScan || '-'}</b></Meta>

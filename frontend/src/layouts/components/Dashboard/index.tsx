@@ -4,6 +4,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pi
 import { Users, BookOpen, Calendar, CheckCircle } from "lucide-react";
 import { GET_TOTAL_CLASSES, GET_TOTAL_STUDENTS, GET_TOTAL_CLASSES_SESSION_TODAY } from "../../../api";
 import { useTotal } from "../../../hooks/useTotal";
+import Loader from "../../../Components/Loader";
 
 // ----------------- Data -----------------
 interface Attendance {
@@ -40,7 +41,7 @@ const Dashboard: React.FC = () => {
  
 
 
-  if (loadingStudents || loadingClasses || loadingClassesSession) return <p>Đang tải dữ liệu...</p>;
+  if (loadingStudents || loadingClasses || loadingClassesSession) return <Loader />;
   if (errorStudents || errorClasses || errorClassesSession) return <p>{errorStudents || errorClasses || errorClassesSession}</p>;
 
 

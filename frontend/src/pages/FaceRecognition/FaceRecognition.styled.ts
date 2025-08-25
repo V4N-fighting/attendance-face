@@ -2,7 +2,7 @@ import styled, { keyframes } from "styled-components";
 
 export const AppBackground = styled.div`
   min-height: 100vh;
-  background: linear-gradient(135deg,rgb(4, 255, 117) 0%,rgb(101, 246, 244) 40%,rgb(101, 246, 244) 100%);
+  background: linear-gradient(135deg, rgb(4 255 117 / 54%) 0%, rgb(246 185 101 / 34%) 40%, rgb(154 101 246 / 32%) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -53,11 +53,10 @@ export const PanelTitle = styled.h2`
   font-size: 2.36rem;
   font-weight: 900;
   letter-spacing: 0.02em;
-  margin-bottom: 18px;
+  margin-bottom: 40px;
   color: #312157;
   text-shadow: 0 1.5px 8px #fff6, 0 0 #0000;
   text-align: center;
-  font-family: 'Montserrat', Arial, sans-serif;
 `;
 
 export const VideoStyled = styled.video`
@@ -108,12 +107,10 @@ export const ResultBox = styled.div`
   width: 100%;
   min-height: 62px;
   padding: 20px 10px;
-  background: rgba(250,254,255,0.55);
   border-radius: 18px;
   font-weight: 700;
   margin: 26px 0 16px 0;
   font-size: 1.12rem;
-  color:rgb(255, 11, 6);
   box-shadow: 0 2px 8px #d1e2fd36;
   text-align: center;
   font-family: 'Montserrat', Arial, sans-serif;
@@ -121,7 +118,7 @@ export const ResultBox = styled.div`
 
 export const Meta = styled.div`
   font-size: 1.01rem;
-  color: #8686bf;
+  color:rgb(238, 255, 1);
   text-align: center;
   margin-bottom: 6px;
 `;
@@ -146,9 +143,12 @@ export const AvatarCircle = styled.div<{ bg: string }>`
 export const LightText = styled.div`
   font-size: .99rem;
   text-align: center;
-  color: #dedcf7;
+  color:rgb(0, 162, 24);
   margin: 12px 0 6px 0;
   font-style: italic;
+  background: #fff;
+  padding: 12px;
+  border-radius: 24px;
 `;
 
 export const MobileNote = styled.div`
