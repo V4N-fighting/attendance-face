@@ -9,10 +9,10 @@ export interface ClassStudent {
 }
 
 // Lấy danh sách lớp
-export const getClasses = async (): Promise<ClassStudent[]> => {
-  const res = await axios.get(GET_CLASS_STUDENTS);
-  return res.data;
-};
+// export const getClasses = async (): Promise<ClassStudent[]> => {
+//   const res = await axios.get(GET_CLASS_STUDENTS);
+//   return res.data;
+// };
 
 // Thêm lớp
 export const addClass = async (cls: ClassStudent): Promise<ClassStudent> => {
@@ -20,19 +20,19 @@ export const addClass = async (cls: ClassStudent): Promise<ClassStudent> => {
   return res.data;
 };
 
-// Sửa lớp
-export const updateClass = async (id: number, cls: ClassStudent): Promise<ClassStudent> => {
-  const res = await axios.put(`${GET_CLASS_STUDENTS}/${id}`, cls);
-  return res.data;
-};
+// // Sửa lớp
+// export const updateClass = async (id: number, cls: ClassStudent): Promise<ClassStudent> => {
+//   const res = await axios.put(`${GET_CLASS_STUDENTS}/${id}`, cls);
+//   return res.data;
+// };
 
-// Xóa lớp
-export const deleteClass = async (id: number): Promise<{ message: string; id: number }> => {
-  console.log("DELETE URL:", `${GET_CLASS_STUDENTS}/${id}`);
-  const res = await axios.delete(`${GET_CLASS_STUDENTS}/${id}`);
+// // Xóa lớp
+// export const deleteClass = async (id: number): Promise<{ message: string; id: number }> => {
+//   console.log("DELETE URL:", `${GET_CLASS_STUDENTS}/${id}`);
+//   const res = await axios.delete(`${GET_CLASS_STUDENTS}/${id}`);
 
-  return res.data;
-};
+//   return res.data;
+// };
 
 // Thêm API lấy số lượng sinh viên của 1 lớp
 export const getClassStudentCount = async (classId: number): Promise<number> => {

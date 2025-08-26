@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { Search, Plus, Edit2, Trash2, Users } from "lucide-react";
+import { Search, Plus, Edit2, Trash2, Users, Calendar } from "lucide-react";
 import {
   getClasses,
   addClass,
@@ -20,6 +20,7 @@ import {
 } from "../../../services/studentService";
 import { RowBetween, SupTitle } from "../../../styled";
 import Loader from "../../../Components/Loader";
+import { ClassSession, getClassesSessionByClassId } from "../../../services/classSesstionService";
 
 // ---------------- Component ----------------
 const Classes: React.FC = () => {
@@ -49,6 +50,11 @@ const Classes: React.FC = () => {
   const [studentAddInput, setStudentAddInput] = useState("");
   const [studentAddDropdown, setStudentAddDropdown] = useState(false);
   const [selectedStudentForAdd, setSelectedStudentForAdd] = useState<number | null>(null);
+
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [scheduleClassId, setScheduleClassId] = useState<number | null>(null);
+  const [sessions, setSessions] = useState<ClassSession[]>([]);
+  const [loadingSessions, setLoadingSessions] = useState(false);
 
   const loadData = async () => {
     try {
@@ -166,7 +172,7 @@ const Classes: React.FC = () => {
   const handleStudentDelete = async (classId: number, studentId: number) => {
 
     if (window.confirm("Bạn có chắc muốn xoá sinh viên này khỏi lớp?")) {
-      
+
       await deleteStudentFromClass(classId, studentId);
       alert("Xoá sinh viên khỏi lớp thành công");
 
@@ -197,6 +203,49 @@ const Classes: React.FC = () => {
   const handleShowStudents = async (classId: number) => {
     setSelectedClassId(classId);
   };
+
+  const handleOpenSchedule = async (classId: number) => {
+    setScheduleClassId(classId);
+    setShowScheduleModal(true);
+    setLoadingSessions(true);
+    try {
+      const data = await getClassesSessionByClassId(classId); // API lấy danh sách buổi học theo class_id
+      setSessions(data);
+    } catch {
+      setSessions([]);
+    } finally {
+      setLoadingSessions(false);
+    }
+  };
+
+  const handleAddSession = async () => {
+    // const newSession = {
+    //   class_id: scheduleClassId!,
+    //   topic: "Chủ đề mới",
+    //   start_time: new Date(),
+    //   end_time: new Date(),
+    //   room: "A101",
+    // };
+    // await addSession(newSession);
+    // const data = await getClassesSession(scheduleClassId!);
+    // setSessions(data);
+  };
+  
+  const handleEditSession = async (session: ClassSession) => {
+    // const updated = { ...session, topic: prompt("Nhập chủ đề mới", session.topic) || session.topic };
+    // await updateSession(session.id, updated);
+    // const data = await getClassesSession(scheduleClassId!);
+    // setSessions(data);
+  };
+  
+  const handleDeleteSession = async (id: number) => {
+    // if (window.confirm("Xoá buổi học này?")) {
+    //   await deleteSession(id);
+    //   const data = await getClassesSession(scheduleClassId!);
+    //   setSessions(data);
+    // }
+  };
+  
 
   const filteredClasses = classes.filter((cls) =>
     cls.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -294,6 +343,7 @@ const Classes: React.FC = () => {
                 <Actions>
                   <Edit2 size={18} onClick={e => { e.stopPropagation(); handleEdit(cls); }} />
                   <Trash2 size={18} onClick={e => { e.stopPropagation(); handleDeleteClass(cls.id!); }} />
+                  <Calendar size={18} onClick={e => { e.stopPropagation(); handleOpenSchedule(cls.id!); }} />
                 </Actions>
               </Td>
             </tr>
@@ -307,108 +357,108 @@ const Classes: React.FC = () => {
           <SupTitle>Danh sách sinh viên lớp {selectedClassName}</SupTitle>
 
           <RowBetween>
-          {/* Ô tìm kiếm danh sách sinh viên trong lớp */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <input
-              type="text"
-              placeholder="Tìm sinh viên theo mã hoặc tên..."
-              value={studentCodeSearch}
-              onChange={e => setStudentCodeSearch(e.target.value)}
-              style={{ padding: 8, borderRadius: 8, border: "1px solid #d1d5db", minWidth: 200 }}
-            />
-          </div>
-          <div >
-                {!showAddStudentForm && (
-                  <Button type="button" primary onClick={() => { setShowAddStudentForm(true); setStudentAddInput(""); setSelectedStudentForAdd(null); }}>
-                    + Thêm sinh viên
-                  </Button>
-                )}
-                {showAddStudentForm && (
-                  <form
-                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8, marginTop: 8, position: 'relative' }}
-                    onSubmit={async e => {
-                      e.preventDefault();
-                      if (!selectedStudentForAdd) return;
-                      await addClassStudentMapping({ class_id: selectedClassId!, student_id: selectedStudentForAdd });
-                      const data = await getStudentsByClass(selectedClassId!);
-                      setStudents(data || []);
-                      const allStudents = await getStudents();
-                      const currentIds = new Set((data || []).map((s: any) => s.id));
-                      setCandidates(allStudents.filter((s: any) => !currentIds.has(s.id)));
-                      setStudentAddInput("");
-                      setShowAddStudentForm(false);
+            {/* Ô tìm kiếm danh sách sinh viên trong lớp */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <input
+                type="text"
+                placeholder="Tìm sinh viên theo mã hoặc tên..."
+                value={studentCodeSearch}
+                onChange={e => setStudentCodeSearch(e.target.value)}
+                style={{ padding: 8, borderRadius: 8, border: "1px solid #d1d5db", minWidth: 200 }}
+              />
+            </div>
+            <div >
+              {!showAddStudentForm && (
+                <Button type="button" primary onClick={() => { setShowAddStudentForm(true); setStudentAddInput(""); setSelectedStudentForAdd(null); }}>
+                  + Thêm sinh viên
+                </Button>
+              )}
+              {showAddStudentForm && (
+                <form
+                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8, marginTop: 8, position: 'relative' }}
+                  onSubmit={async e => {
+                    e.preventDefault();
+                    if (!selectedStudentForAdd) return;
+                    await addClassStudentMapping({ class_id: selectedClassId!, student_id: selectedStudentForAdd });
+                    const data = await getStudentsByClass(selectedClassId!);
+                    setStudents(data || []);
+                    const allStudents = await getStudents();
+                    const currentIds = new Set((data || []).map((s: any) => s.id));
+                    setCandidates(allStudents.filter((s: any) => !currentIds.has(s.id)));
+                    setStudentAddInput("");
+                    setShowAddStudentForm(false);
+                    setSelectedStudentForAdd(null);
+                    loadData();
+                  }}
+                >
+                  <input
+                    autoFocus
+                    type="text"
+                    placeholder="Nhập mã/tên sinh viên để tìm..."
+                    value={studentAddInput}
+                    onFocus={() => setStudentAddDropdown(true)}
+                    onChange={e => {
+                      setStudentAddInput(e.target.value);
                       setSelectedStudentForAdd(null);
-                      loadData();
+                      setStudentAddDropdown(true);
                     }}
-                  >
-                    <input
-                      autoFocus
-                      type="text"
-                      placeholder="Nhập mã/tên sinh viên để tìm..."
-                      value={studentAddInput}
-                      onFocus={() => setStudentAddDropdown(true)}
-                      onChange={e => {
-                        setStudentAddInput(e.target.value);
-                        setSelectedStudentForAdd(null);
-                        setStudentAddDropdown(true);
-                      }}
-                      style={{minWidth:240, padding:8, borderRadius:8, border:"1px solid #d1d5db"}}
-                    />
-                    {studentAddInput.trim() !== '' && studentAddDropdown && (
-                      <div style={{
-                        background: '#fff',
-                        border: '1px solid #d1d5db',
-                        borderRadius: '8px',
-                        position: 'absolute',
-                        left: 0,
-                        top: '42px',
-                        zIndex: 10,
-                        minWidth: 240,
-                        maxHeight: 180,
-                        overflowY: 'auto',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.07)'
-                      }}>
-                        {candidates
-                          .filter(stu =>
-                            stu.student_code.toLowerCase().includes(studentAddInput.toLowerCase()) ||
-                            stu.name.toLowerCase().includes(studentAddInput.toLowerCase())
-                          ).slice(0, 5)
-                          .map(stu => (
-                            <div
-                              key={stu.id}
-                              style={{
-                                padding: '8px 12px',
-                                cursor: 'pointer',
-                                borderBottom: '1px solid #f3f4f6',
-                                background: selectedStudentForAdd === stu.id ? "#e5edfa" : undefined
-                              }}
-                              onClick={() => {
-                                if (stu.id !== undefined) {
-                                  setSelectedStudentForAdd(stu.id);
-                                }
-                                setStudentAddInput(stu.student_code + ' - ' + stu.name);
-                                setStudentAddDropdown(false);
-                              }}
-                            >
-                              <strong>{stu.student_code}</strong> - {stu.name}
-                            </div>
-                          ))
-                        }
-                        {candidates.filter(stu =>
+                    style={{ minWidth: 240, padding: 8, borderRadius: 8, border: "1px solid #d1d5db" }}
+                  />
+                  {studentAddInput.trim() !== '' && studentAddDropdown && (
+                    <div style={{
+                      background: '#fff',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      position: 'absolute',
+                      left: 0,
+                      top: '42px',
+                      zIndex: 10,
+                      minWidth: 240,
+                      maxHeight: 180,
+                      overflowY: 'auto',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.07)'
+                    }}>
+                      {candidates
+                        .filter(stu =>
                           stu.student_code.toLowerCase().includes(studentAddInput.toLowerCase()) ||
                           stu.name.toLowerCase().includes(studentAddInput.toLowerCase())
-                        ).length === 0 && (
-                            <div style={{ padding: '8px 12px', color: '#888' }}>Không tìm thấy sinh viên phù hợp</div>
-                          )}
-                      </div>
-                    )}
-                    <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                      <Button primary type="submit" disabled={!selectedStudentForAdd}>Thêm vào lớp</Button>
-                      <Button type="button" onClick={() => { setShowAddStudentForm(false); setStudentAddInput(""); setSelectedStudentForAdd(null); }}>Huỷ</Button>
+                        ).slice(0, 5)
+                        .map(stu => (
+                          <div
+                            key={stu.id}
+                            style={{
+                              padding: '8px 12px',
+                              cursor: 'pointer',
+                              borderBottom: '1px solid #f3f4f6',
+                              background: selectedStudentForAdd === stu.id ? "#e5edfa" : undefined
+                            }}
+                            onClick={() => {
+                              if (stu.id !== undefined) {
+                                setSelectedStudentForAdd(stu.id);
+                              }
+                              setStudentAddInput(stu.student_code + ' - ' + stu.name);
+                              setStudentAddDropdown(false);
+                            }}
+                          >
+                            <strong>{stu.student_code}</strong> - {stu.name}
+                          </div>
+                        ))
+                      }
+                      {candidates.filter(stu =>
+                        stu.student_code.toLowerCase().includes(studentAddInput.toLowerCase()) ||
+                        stu.name.toLowerCase().includes(studentAddInput.toLowerCase())
+                      ).length === 0 && (
+                          <div style={{ padding: '8px 12px', color: '#888' }}>Không tìm thấy sinh viên phù hợp</div>
+                        )}
                     </div>
-                  </form>
-                )}
-              </div>
+                  )}
+                  <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                    <Button primary type="submit" disabled={!selectedStudentForAdd}>Thêm vào lớp</Button>
+                    <Button type="button" onClick={() => { setShowAddStudentForm(false); setStudentAddInput(""); setSelectedStudentForAdd(null); }}>Huỷ</Button>
+                  </div>
+                </form>
+              )}
+            </div>
           </RowBetween>
           {studentLoading ? (
             <p>Đang tải sinh viên...</p>
@@ -434,18 +484,64 @@ const Classes: React.FC = () => {
                       <Td>{stu.name}</Td>
                       <Td>
                         <Actions>
-                          <Trash2 size={18} onClick={() => handleStudentDelete(selectedClassId!,stu.id!)} />
+                          <Trash2 size={18} onClick={() => handleStudentDelete(selectedClassId!, stu.id!)} />
                         </Actions>
                       </Td>
                     </tr>
                   ))}
                 </tbody>
               </Table>
-              
+
             </>
           )}
         </StudentContainer>
       )}
+
+      {showScheduleModal && (
+        <ModalOverlay onClick={() => setShowScheduleModal(false)}>
+        <ModalContent onClick={(e) => e.stopPropagation()}>
+          <h3>Lịch học của lớp {scheduleClassId}</h3>
+    
+          {loadingSessions ? (
+            <p>Đang tải...</p>
+          ) : (
+            <Table>
+              <thead>
+                <tr>
+                  <Th>Chủ đề</Th>
+                  <Th>Bắt đầu</Th>
+                  <Th>Kết thúc</Th>
+                  <Th>Phòng</Th>
+                  <Th>Hành động</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {sessions.map((s) => (
+                  <tr key={s.id}>
+                    <Td>{s.topic}</Td>
+                    <Td>{new Date(s.start_time).toLocaleString()}</Td>
+                    <Td>{new Date(s.end_time).toLocaleString()}</Td>
+                    <Td>{s.room}</Td>
+                    <Td>
+                      <Actions>
+                        <Edit2 size={16} onClick={() => handleEditSession(s)} />
+                        <Trash2 size={16} />
+                      </Actions>
+                    </Td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          )}
+    
+          <Button primary onClick={() => handleAddSession()}>
+            + Thêm buổi học
+          </Button>
+          <Button onClick={() => setShowScheduleModal(false)}>Đóng</Button>
+        </ModalContent>
+      </ModalOverlay>
+      )}
+
     </Container>
   );
 };
@@ -591,5 +687,25 @@ const StudentTable = styled.table`
     border-bottom: 1px solid #e5e7eb;
   }
 `;
+
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+`;
+
+const ModalContent = styled.div`
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  min-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+`;
+
 
 export default Classes;

@@ -1,36 +1,68 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { Download, Camera, CheckCircle, XCircle, Clock } from "lucide-react";
+import { ClassSession, getClassesSessionByClassId } from "../../../services/classSesstionService";
+import { Class, getClasses } from "../../../services/classService";
+import { getStudentsByClass } from "../../../services/classStudentService";
 
 
-
-// ---------------- Sample Data ----------------
-interface Student {
-  id: number;
+interface Attendance {
+  student_code: string;
   name: string;
   status: "present" | "absent" | "late";
   checkIn?: string;
 }
 
-const initialStudents: Student[] = [
-  { id: 1, name: "Nguyễn Văn A", status: "present", checkIn: "08:01" },
-  { id: 2, name: "Trần Thị B", status: "late", checkIn: "08:15" },
-  { id: 3, name: "Lê Văn C", status: "absent" },
-];
 
 // ---------------- Component ----------------
 const Attendance: React.FC = () => {
-  const [students, setStudents] = useState<Student[]>(initialStudents);
+  const [students, setStudents] = useState<Attendance[]>([]);
+  const [classes, setClasses] = useState<Class[]>([]);
+  const [classSession, setClassSession] = useState<ClassSession[]>([]);
+  const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
 
-  const handleStatusChange = (id: number, status: Student["status"]) => {
+
+
+  const loadClasses = async () => {
+    try {
+      const data = await getClasses();
+      console.log("lop: ", data);
+      setClasses(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    loadClasses();
+  }, []);
+
+  useEffect(() => {
+    if (selectedClassId) {
+      getStudentsByClass(selectedClassId)
+        .then((data) => setStudents(data))
+        .catch((err) => console.error(err));
+  
+      getClassesSessionByClassId(selectedClassId)
+        .then((data) => setClassSession(data))
+        .catch((err) => console.error(err));
+    } else {
+      setStudents([]);
+      setClassSession([]);
+    }
+  }, [selectedClassId]);
+
+
+  const handleStatusChange = (student_code: string, status: Attendance["status"]) => {
     setStudents((prev) =>
       prev.map((s) =>
-        s.id === id
+        s.student_code === student_code
           ? { ...s, status, checkIn: status === "absent" ? undefined : "08:30" }
           : s
       )
     );
   };
+
 
   return (
     <Container>
@@ -38,14 +70,27 @@ const Attendance: React.FC = () => {
       <Header>
         <Title>Điểm danh sinh viên</Title>
         <Controls>
-          <Select>
-            <option>Lớp: CNTT-K16</option>
-            <option>Lớp: Kinh tế-K15</option>
+          <Select
+            value={selectedClassId ?? ""}
+            onChange={(e) => setSelectedClassId(Number(e.target.value))}
+          >
+            <option value="">-- Chọn lớp --</option>
+            {classes.map((cls) => (
+              <option key={cls.id} value={cls.id}>
+                Lớp: {cls.name}
+              </option>
+            ))}
           </Select>
+
           <Select>
-            <option>Buổi: 12/09/2025 - Sáng</option>
-            <option>Buổi: 12/09/2025 - Chiều</option>
+            <option value="">-- Chọn buổi học --</option>
+            {classSession.map((session) => (
+              <option key={session.id} value={session.id}>
+                Buổi: {new Date(session.start_time).toLocaleString()}
+              </option>
+            ))}
           </Select>
+
           <Button primary>
             <Camera size={18} /> Nhận diện khuôn mặt
           </Button>
@@ -68,8 +113,8 @@ const Attendance: React.FC = () => {
         </thead>
         <tbody>
           {students.map((student) => (
-            <tr key={student.id}>
-              <Td>{student.id}</Td>
+            <tr key={student.student_code}>
+              <Td>{student.student_code}</Td>
               <Td>{student.name}</Td>
               <Td>
                 <StatusTag status={student.status}>
@@ -79,8 +124,8 @@ const Attendance: React.FC = () => {
                   {student.status === "present"
                     ? "Có mặt"
                     : student.status === "absent"
-                    ? "Vắng"
-                    : "Đi muộn"}
+                      ? "Vắng"
+                      : "Đi muộn"}
                 </StatusTag>
               </Td>
               <Td>{student.checkIn || "-"}</Td>
@@ -88,7 +133,7 @@ const Attendance: React.FC = () => {
                 <Select
                   value={student.status}
                   onChange={(e) =>
-                    handleStatusChange(student.id, e.target.value as Student["status"])
+                    handleStatusChange(student.student_code, e.target.value as Attendance["status"])
                   }
                 >
                   <option value="present">Có mặt</option>
@@ -184,8 +229,8 @@ const StatusTag = styled.span<{ status: "present" | "absent" | "late" }>`
     props.status === "present"
       ? "#10b981"
       : props.status === "absent"
-      ? "#ef4444"
-      : "#f59e0b"};
+        ? "#ef4444"
+        : "#f59e0b"};
 `;
 
 export default Attendance;

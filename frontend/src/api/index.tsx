@@ -7,4 +7,7 @@ export const GET_STUDENTS = `${API_URL}/students`;
 export const GET_CLASSES = `${API_URL}/classes`;
 export const GET_CLASS_STUDENTS = `${API_URL}/class_student`;
 export const GET_CLASS_STUDENTS_COUNT = `${API_URL}/class_student_count`;
+export const GET_CLASSES_SESSION = `${API_URL}/classes_session`;
+export const GET_CLASSES_SESSION_COUNT_TODAY = `${API_URL}/classes_session_count/today`;
+
 
