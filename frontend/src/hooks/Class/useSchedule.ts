@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { ClassSession, getClassesSessionByClassId } from "../services/classSesstionService";
+import { ClassSession, getClassesSessionByClassId } from "../../services/classSesstionService";
 
 
 export function useSchedule() {

@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
-import { addClass, Class, deleteClass, getClasses, updateClass } from "../services/classService";
-import { getClassStudentCount } from "../services/classStudentService";
+import { addClass, Class, deleteClass, getClasses, updateClass } from "../../services/classService";
+import { getClassStudentCount } from "../../services/classStudentService";
 
 
 export function useClasses() {
@@ -13,7 +13,10 @@ const [error, setError] = useState<string | null>(null);
 const load = useCallback(async () => {
 try {
 setLoading(true);
+console.log("Start load classes");
 const data = await getClasses();
+console.log("Got classes", data);
+
 setClasses(data || []);
 
 

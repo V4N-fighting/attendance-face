@@ -102,3 +102,4 @@ async def register(
     except Exception as e:
         return {"status": "error", "msg": str(e)}
     return {"status": "success", "msg": "Đăng ký thành công!"}
+

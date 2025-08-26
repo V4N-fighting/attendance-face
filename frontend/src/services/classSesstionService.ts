@@ -10,7 +10,6 @@ export interface ClassSession {
   end_time: string;
   room: string;
 }
-
 export const getClassesSession = async (): Promise<ClassSession[]> => {
   const res = await axios.get(GET_CLASSES_SESSION);
   return res.data;

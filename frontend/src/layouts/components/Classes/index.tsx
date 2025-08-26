@@ -1,19 +1,20 @@
 import React, { useState, useMemo } from "react";
 import styled from "styled-components";
 import { Search, Plus } from "lucide-react";
-import { useClasses } from "../../../hooks/useClasses";
+import { useClasses } from "../../../hooks/Class/useClasses";
 import { useStudents } from "../../../hooks/useStudents";
-import { useSchedule } from "../../../hooks/useSchedule";
+import { useSchedule } from "../../../hooks/Class/useSchedule";
 import Loader from "../../../Components/Loader";
 import ClassForm from "./ClassForm";
 import ClassTable from "./ClassTable";
 import StudentPanel from "./StudentPanel";
 import ScheduleModal from "./ScheduleModal";
+import { useClassSessions } from "../../../hooks/Class/useClassSessions";
 
 const Classes: React.FC = () => {
   const { classes, counts, loading, error, create, modify, remove, load } = useClasses();
   const { students, candidates, loading: studentLoading, loadForClass, removeFromClass, addToClass } = useStudents();
-  const { sessions, loading: sessionsLoading, load: loadSchedule } = useSchedule();
+  const { sessions, loading: sessionsLoading, loadByClassId, add, update, remove: removeSession } = useClassSessions();
 
   const [editingId, setEditingId] = useState<number | null>(null);
   const [name, setName] = useState("");
@@ -79,7 +80,11 @@ const Classes: React.FC = () => {
               await load();
             }
           } 
-          onOpenSchedule={(id)=>{ setShowSchedule(true); loadSchedule(id); }} 
+          onOpenSchedule={ (id) => {
+            setSelectedClassId(id);
+            loadByClassId(id);  // load schedule theo classId
+            setShowSchedule(true);
+          } }
         />
 
       {selectedClassId && (
@@ -108,7 +113,17 @@ const Classes: React.FC = () => {
       )}
 
 
-      <ScheduleModal visible={showSchedule} onClose={()=>setShowSchedule(false)} classId={selectedClassId} sessions={sessions} loading={sessionsLoading} onAdd={()=>{}} onEdit={()=>{}} onDelete={()=>{}} />
+        <ScheduleModal
+          visible={showSchedule}
+          onClose={() => setShowSchedule(false)}
+          classId={selectedClassId}
+          // className={selectedClassName}
+          sessions={sessions}
+          loading={sessionsLoading}
+          onAdd={(s) => add(s)}                    // thêm
+          onEdit={(s) => update(s.id!, s)}         // sửa
+          onDelete={(id) => removeSession(id)}     // xóa
+        />
     </Container>
   );
 };

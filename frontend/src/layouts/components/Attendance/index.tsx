@@ -7,9 +7,11 @@ import { getStudentsByClass } from "../../../services/classStudentService";
 
 
 interface Attendance {
+  start_time: any;
+  end_time: any;
   student_code: string;
   name: string;
-  status: "present" | "absent" | "late";
+  status: "present" | "absent" | "late" | "unmarked";
   checkIn?: string;
 }
 
@@ -20,13 +22,14 @@ const Attendance: React.FC = () => {
   const [classes, setClasses] = useState<Class[]>([]);
   const [classSession, setClassSession] = useState<ClassSession[]>([]);
   const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
+  const [selectedSession, setSelectedSession] = useState<any>(null);
+
 
 
 
   const loadClasses = async () => {
     try {
       const data = await getClasses();
-      console.log("lop: ", data);
       setClasses(data);
     } catch (err) {
       console.error(err);
@@ -39,18 +42,27 @@ const Attendance: React.FC = () => {
 
   useEffect(() => {
     if (selectedClassId) {
+
       getStudentsByClass(selectedClassId)
-        .then((data) => setStudents(data))
+        .then((data) => {
+          const mapped: Attendance[] = data.map((s: any) => ({
+            ...s,
+            status: s.status ? s.status : "unmarked",
+          }));
+          setStudents(mapped);
+        })
         .catch((err) => console.error(err));
-  
+
       getClassesSessionByClassId(selectedClassId)
-        .then((data) => setClassSession(data))
+        .then((data) => { setClassSession(data); console.log("buoi hoc: ", data); })
         .catch((err) => console.error(err));
+
     } else {
       setStudents([]);
       setClassSession([]);
     }
   }, [selectedClassId]);
+
 
 
   const handleStatusChange = (student_code: string, status: Attendance["status"]) => {
@@ -82,18 +94,27 @@ const Attendance: React.FC = () => {
             ))}
           </Select>
 
-          <Select>
+          <Select
+            onChange={(e) => {
+              const session = classSession.find(s => s.id === Number(e.target.value));
+              setSelectedSession(session || null);
+            }}
+          >
             <option value="">-- Chọn buổi học --</option>
-            {classSession.map((session) => (
-              <option key={session.id} value={session.id}>
-                Buổi: {new Date(session.start_time).toLocaleString()}
-              </option>
-            ))}
+            {classSession.map((session) => {
+              const date = new Date(session.start_time).toLocaleDateString("vi-VN"); // ngày
+              const start = new Date(session.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+              const end = new Date(session.end_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+              return (
+                <option key={session.id} value={session.id}>
+                  {date} ({start} - {end})
+                </option>
+              );
+            })}
           </Select>
 
-          <Button primary>
-            <Camera size={18} /> Nhận diện khuôn mặt
-          </Button>
+
           <Button>
             <Download size={18} /> Xuất báo cáo
           </Button>
@@ -117,30 +138,45 @@ const Attendance: React.FC = () => {
               <Td>{student.student_code}</Td>
               <Td>{student.name}</Td>
               <Td>
-                <StatusTag status={student.status}>
+                <StatusTag status={student.status as any}>
                   {student.status === "present" && <CheckCircle size={14} />}
                   {student.status === "absent" && <XCircle size={14} />}
                   {student.status === "late" && <Clock size={14} />}
-                  {student.status === "present"
-                    ? "Có mặt"
-                    : student.status === "absent"
-                      ? "Vắng"
-                      : "Đi muộn"}
+                  {student.status === "unmarked" && <XCircle size={14} />}
+                  {student.status === "late" && "Đi muộn"}
+                  {student.status === "present" && "Có mặt"}
+                  {student.status === "absent" && "Vắng"}
+                  {student.status === "unmarked" && "Chưa cập nhật"}
                 </StatusTag>
               </Td>
-              <Td>{student.checkIn || "-"}</Td>
+
+              <Td>
+                {student.checkIn
+                  ? student.checkIn
+                  : selectedSession
+                    ? `${new Date(selectedSession.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} - ${new Date(selectedSession.end_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
+                    : "-"}
+              </Td>
+
+
               <Td>
                 <Select
                   value={student.status}
                   onChange={(e) =>
-                    handleStatusChange(student.student_code, e.target.value as Attendance["status"])
+                    handleStatusChange(
+                      student.student_code,
+                      e.target.value as Attendance["status"]
+                    )
                   }
+                  disabled={student.status === "unmarked"}
                 >
                   <option value="present">Có mặt</option>
                   <option value="absent">Vắng</option>
                   <option value="late">Đi muộn</option>
                 </Select>
               </Td>
+
+
             </tr>
           ))}
         </tbody>
@@ -230,7 +266,9 @@ const StatusTag = styled.span<{ status: "present" | "absent" | "late" }>`
       ? "#10b981"
       : props.status === "absent"
         ? "#ef4444"
-        : "#f59e0b"};
+        : props.status === "late"
+          ? "#f59e0b"
+          : "grey"};
 `;
 
 export default Attendance;
